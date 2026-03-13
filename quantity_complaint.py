@@ -15,14 +15,15 @@ st.set_page_config(
 # Helpers
 # =========================
 def read_input_file(uploaded_file) -> pd.DataFrame:
-    """Read uploaded Excel file."""
     file_name = uploaded_file.name.lower()
 
     if file_name.endswith(".xlsx") or file_name.endswith(".xls"):
         return pd.read_excel(uploaded_file)
 
-    raise ValueError("Unsupported file format. Please upload an Excel file (.xlsx or .xls).")
+    if file_name.endswith(".csv"):
+        return pd.read_csv(uploaded_file, sep="\t", encoding="utf-16")
 
+    raise ValueError("Unsupported file format. Please upload an Excel or CSV file.")
 
 def parse_multi_input(raw_text: str) -> List[str]:
     """
@@ -154,7 +155,7 @@ st.title("📋 Issue Table Creator")
 
 uploaded_file = st.file_uploader(
     "Upload Excel file",
-    type=["xlsx", "xls"],
+    type=["xlsx", "xls", "csv"],
 )
 
 issue_type = st.selectbox(
