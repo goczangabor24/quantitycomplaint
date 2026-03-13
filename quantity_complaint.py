@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="Affected Items Mapper", page_icon="📋", layout="wide")
+st.set_page_config(page_title="Quantity Complaint Creator", page_icon="📋", layout="wide")
 
 
 # ---------- Helpers ----------
@@ -77,7 +77,7 @@ def build_output(filtered_df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ---------- UI ----------
-st.title("📋 Affected Items Mapper")
+st.title("📋 Quantity Complaint Creator")
 st.caption("Upload the order export, automatically detect negative O-column rows, or manually filter by LA-ID.")
 
 uploaded_file = st.file_uploader(
