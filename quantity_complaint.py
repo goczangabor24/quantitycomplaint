@@ -110,7 +110,7 @@ def build_output_table(source_rows: pd.DataFrame, issue_type: str) -> pd.DataFra
     col_a = source_rows.iloc[:, 0].astype(str)
     col_b = source_rows.iloc[:, 1].astype(str)
     col_c = source_rows.iloc[:, 2].astype(str)
-    col_h = format_price_series(source_rows.iloc[:, 7])
+    col_h = to_float_series(source_rows.iloc[:, 7]).round(2)
     col_m = to_int_series(source_rows.iloc[:, 12])
     col_n = to_int_series(source_rows.iloc[:, 13])
     col_o = to_int_series(source_rows.iloc[:, 14])
@@ -133,6 +133,12 @@ def build_output_table(source_rows: pd.DataFrame, issue_type: str) -> pd.DataFra
             "Purchase Price 1": col_h,
         }
     )
+
+    output["Purchase Price 1"] = output["Purchase Price 1"].map(
+        lambda x: "" if pd.isna(x) else f"{x:.2f}".replace(".", ",")
+    )
+
+    return output.reset_index(drop=True)
 
     return output.reset_index(drop=True)
 
