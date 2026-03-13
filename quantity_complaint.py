@@ -16,12 +16,10 @@ def normalize_number(value) -> float | None:
     if not text:
         return None
 
-    # Keep digits, minus sign, comma and dot
     text = re.sub(r"[^0-9,.-]", "", text)
     if not text:
         return None
 
-    # European format: thousands='.', decimal=','
     text = text.replace(".", "").replace(",", ".")
     try:
         return float(text)
@@ -47,7 +45,7 @@ def read_input_file(uploaded_file) -> pd.DataFrame:
     raise ValueError("Unsupported file format. Please upload a CSV or Excel file.")
 
 
-def build_output(filtered_df: pd.DataFrame) -> pd.DataFrame:
+def build_output(filtered_df: pd.DataFrame, use_negative_o_logic: bool = False) -> pd.DataFrame:
     """
     Output layout:
     1 empty
@@ -55,22 +53,36 @@ def build_output(filtered_df: pd.DataFrame) -> pd.DataFrame:
     3 A
     4 C
     5 B
-    6 L
-    7 K
+    6 calculated delivered quantity
+    7 M
     8 empty
     9 H
+
+    If use_negative_o_logic=True:
+        Quantity Delivered = M + O
+    else:
+        Quantity Delivered = N
     """
+
+    if use_negative_o_logic:
+        quantity_delivered = (
+            filtered_df.iloc[:, 12].apply(normalize_number).fillna(0)
+            + filtered_df.iloc[:, 14].apply(normalize_number).fillna(0)
+        )
+    else:
+        quantity_delivered = filtered_df.iloc[:, 13]
+
     output = pd.DataFrame(
         {
             " ": [""] * len(filtered_df),
             "  ": [""] * len(filtered_df),
-            "LA-ID": filtered_df.iloc[:, 0].astype(str),           # A
-            "Shop Article": filtered_df.iloc[:, 2],                # C
-            "Supplier Art-ID": filtered_df.iloc[:, 1],             # B
-            "Quantity Delivered": filtered_df.iloc[:, 13],         # N
-            "Quantity Ordered": filtered_df.iloc[:, 12],           # M
+            "LA-ID": filtered_df.iloc[:, 0].astype(str),      # A
+            "Shop Article": filtered_df.iloc[:, 2],           # C
+            "Supplier Art-ID": filtered_df.iloc[:, 1],        # B
+            "Quantity Delivered": quantity_delivered,         # N OR (M+O)
+            "Quantity Ordered": filtered_df.iloc[:, 12],      # M
             "   ": [""] * len(filtered_df),
-            "Purchase Price 1": filtered_df.iloc[:, 7],            # H
+            "Purchase Price 1": filtered_df.iloc[:, 7],       # H
         }
     )
     return output.reset_index(drop=True)
@@ -118,9 +130,15 @@ if uploaded_file is not None:
     negative_mask = o_numeric.fillna(0) < 0
     negative_rows = working_df[negative_mask].copy()
 
+    use_negative_o_logic = False
+
     if not negative_rows.empty:
-        st.success(f"Found {len(negative_rows)} row(s) with a negative value in column O ({o_col}). Auto-filter applied.")
+        st.success(
+            f"Found {len(negative_rows)} row(s) with a negative value in column O ({o_col}). "
+            "Auto-filter applied."
+        )
         filtered_df = negative_rows
+        use_negative_o_logic = True
     else:
         st.info("No negative values found in column O. Please provide affected LA-ID values.")
         affected_input = st.text_input(
@@ -147,10 +165,9 @@ if uploaded_file is not None:
         st.warning("No matching rows found for the current filter.")
         st.stop()
 
-    output_df = build_output(filtered_df)
+    output_df = build_output(filtered_df, use_negative_o_logic=use_negative_o_logic)
 
     st.subheader("Editable output")
-    st.caption("You can edit the table below and download the edited version as CSV.")
 
     edited_df = st.data_editor(
         output_df,
