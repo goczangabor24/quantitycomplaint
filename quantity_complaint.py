@@ -67,8 +67,8 @@ def build_output(filtered_df: pd.DataFrame) -> pd.DataFrame:
             "LA-ID": filtered_df.iloc[:, 0].astype(str),           # A
             "Shop Article": filtered_df.iloc[:, 2],                # C
             "Supplier Art-ID": filtered_df.iloc[:, 1],             # B
-            "Packages Delivered": filtered_df.iloc[:, 11],         # L
-            "Packages Ordered": filtered_df.iloc[:, 10],           # K
+            "Quantity Delivered": filtered_df.iloc[:, 13],         # N
+            "Quantity Ordered": filtered_df.iloc[:, 12],           # M
             "   ": [""] * len(filtered_df),
             "Purchase Price 1": filtered_df.iloc[:, 7],            # H
         }
