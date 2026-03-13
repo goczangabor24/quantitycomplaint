@@ -1,4 +1,3 @@
-import io
 import re
 from typing import List
 
@@ -77,12 +76,6 @@ def build_output(filtered_df: pd.DataFrame) -> pd.DataFrame:
     return output.reset_index(drop=True)
 
 
-def to_clipboard_tsv(df: pd.DataFrame) -> str:
-    buffer = io.StringIO()
-    df.to_csv(buffer, sep="\t", index=False)
-    return buffer.getvalue()
-
-
 # ---------- UI ----------
 st.title("📋 Affected Items Mapper")
 st.caption("Upload the order export, automatically detect negative O-column rows, or manually filter by LA-ID.")
@@ -125,9 +118,6 @@ if uploaded_file is not None:
     negative_mask = o_numeric.fillna(0) < 0
     negative_rows = working_df[negative_mask].copy()
 
-    st.subheader("Source preview")
-    st.dataframe(working_df, use_container_width=True, hide_index=True)
-
     if not negative_rows.empty:
         st.success(f"Found {len(negative_rows)} row(s) with a negative value in column O ({o_col}). Auto-filter applied.")
         filtered_df = negative_rows
@@ -160,7 +150,7 @@ if uploaded_file is not None:
     output_df = build_output(filtered_df)
 
     st.subheader("Editable output")
-    st.caption("You can edit the table below. The copyable TSV box updates from the edited version.")
+    st.caption("You can edit the table below and download the edited version as CSV.")
 
     edited_df = st.data_editor(
         output_df,
@@ -168,15 +158,6 @@ if uploaded_file is not None:
         hide_index=True,
         num_rows="fixed",
         key="editable_output_table",
-    )
-
-    st.subheader("Copyable output")
-    st.caption("Copy everything from the box below and paste it directly into Excel.")
-    tsv_text = to_clipboard_tsv(edited_df)
-    st.text_area(
-        "Excel-ready TSV",
-        value=tsv_text,
-        height=240,
     )
 
     csv_bytes = edited_df.to_csv(index=False).encode("utf-8-sig")
